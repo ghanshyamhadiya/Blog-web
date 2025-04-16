@@ -7,8 +7,8 @@ export class AuthService {
 
     constructor() {
         this.client
-            .setEndpoint(import.meta.env.VITE_APPWRITE_URL) 
-            .setProject(import.meta.env.VITE_APPWRITE_PROJECT_ID);
+            .setEndpoint(conf.appwriteUrl)
+            .setProject(conf.appwriteProjectId);
         this.account = new Account(this.client)
     };
 
