@@ -14,7 +14,7 @@ function AddPost() {
     >
       <Container>
         <motion.div
-          className="mb-8"
+          className="mb-8 pt-24 pb-8 text-center"
           initial={{ y: -20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.4 }}
