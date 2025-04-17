@@ -18,6 +18,7 @@ function RTE({
                     animate={{ x: 0, opacity: 1 }}
                     transition={{ duration: 0.3 }}
                 >
+                
                     {label}
                 </motion.label>
             )}
@@ -33,6 +34,7 @@ function RTE({
                     control={control}
                     render={({ field: { onChange } }) => (
                         <Editor
+                            apiKey="nuozva94ed1gsaay4g7nqugllhboo90j7vtufp1o36uio18n"
                             initialValue='default value'
                             init={{
                                 initialValue: defaultValue,
