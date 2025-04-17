@@ -1,28 +1,28 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { login } from '../store/authSlice';
+import { login as authLogin } from '../store/authSlice';
 import { Input, Button, Logo } from "./index";
 import { useDispatch } from 'react-redux';
 import authService from '../appwrite/auth';
 import { useForm } from 'react-hook-form';
-import { Mail, User, Lock, AlertCircle, Eye, EyeOff } from 'lucide-react';
+import { Mail, Lock, AlertCircle, Eye, EyeOff } from 'lucide-react';
 
-function Signup() {
+function Login() {
     const navigate = useNavigate();
+    const dispatch = useDispatch();
+    const { register, handleSubmit, formState: { errors } } = useForm();
     const [error, setError] = useState("");
     const [isLoading, setIsLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
-    const dispatch = useDispatch();
-    const { register, handleSubmit, formState: { errors } } = useForm();
 
-    const create = async (data) => {
+    const login = async (data) => {
         setError("");
         setIsLoading(true);
         try {
-            const userData = await authService.createAccount(data);
-            if (userData) {
+            const session = await authService.login(data);
+            if (session) {
                 const userData = await authService.getCurrentUser();
-                if (userData) dispatch(login(userData));
+                if (userData) dispatch(authLogin(userData));
                 navigate("/");
             }
         } catch (error) {
@@ -47,16 +47,16 @@ function Signup() {
                     </div>
                     
                     <h2 className="text-center text-3xl font-bold tracking-tight text-gray-900">
-                        Create your account
+                        Welcome back
                     </h2>
                     
                     <p className="mt-3 text-center text-sm text-gray-600 bg-gray-50 py-2 rounded-lg border border-gray-100">
-                        Already have an account?{' '}
+                        Don't have an account?{' '}
                         <Link
-                            to="/login"
+                            to="/signup"
                             className="font-medium text-blue-600 hover:text-blue-500 transition-colors duration-300 underline"
                         >
-                            Sign in
+                            Sign up
                         </Link>
                     </p>
                     
@@ -67,23 +67,8 @@ function Signup() {
                         </div>
                     )}
                     
-                    <form className="mt-8 space-y-6" onSubmit={handleSubmit(create)}>
+                    <form className="mt-8 space-y-6" onSubmit={handleSubmit(login)}>
                         <div className="space-y-4">
-                            <div>
-                                <Input
-                                    label="Full Name"
-                                    placeholder="Enter your full name"
-                                    icon={<User size={18} className="text-gray-500" />}
-                                    className="bg-white border-2 border-gray-200 focus:border-blue-500 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-200 transition-all duration-300"
-                                    {...register("name", {
-                                        required: "Full name is required",
-                                    })}
-                                />
-                                {errors.name && (
-                                    <p className="text-red-500 text-xs ml-1 mt-1">{errors.name.message}</p>
-                                )}
-                            </div>
-                            
                             <div>
                                 <Input
                                     label="Email Address"
@@ -109,15 +94,11 @@ function Signup() {
                                 <Input
                                     label="Password"
                                     type={showPassword ? "text" : "password"}
-                                    placeholder="Create a secure password"
+                                    placeholder="Enter your password"
                                     icon={<Lock size={18} className="text-gray-500" />}
                                     className="bg-white border-2 border-gray-200 focus:border-blue-500 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-200 transition-all duration-300"
                                     {...register("password", {
-                                        required: "Password is required",
-                                        minLength: {
-                                            value: 6,
-                                            message: "Password must be at least 6 characters"
-                                        }
+                                        required: "Password is required"
                                     })}
                                 />
                                 <button 
@@ -136,13 +117,33 @@ function Signup() {
                             </div>
                         </div>
                         
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center">
+                                <input
+                                    id="remember-me"
+                                    name="remember-me"
+                                    type="checkbox"
+                                    className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                />
+                                <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900">
+                                    Remember me
+                                </label>
+                            </div>
+                            
+                            <div className="text-sm">
+                                <Link to="#" className="font-medium text-blue-600 hover:text-blue-500 transition-colors duration-300">
+                                    Forgot password?
+                                </Link>
+                            </div>
+                        </div>
+                        
                         <div>
                             <Button 
                                 type="submit" 
                                 className="w-full group relative bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-medium shadow-md hover:shadow-lg transition-all duration-300"
                                 isLoading={isLoading}
                             >
-                                Create Account
+                                Sign in
                             </Button>
                         </div>
                          
@@ -153,4 +154,4 @@ function Signup() {
     );
 }
 
-export default Signup;
+export default Login;
