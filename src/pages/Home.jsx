@@ -10,9 +10,11 @@ import {
   ChevronDown, 
   MousePointer
 } from 'lucide-react';
-
+import { useSelector } from 'react-redux';
 function Home() {
     const [loading, setLoading] = useState(true);
+    
+      const authStatus = useSelector((state) => state.auth.status);
     const [activeSection, setActiveSection] = useState('hero');
     const [featuredTopics, setFeaturedTopics] = useState([
         { id: 1, name: 'Technology', count: 24, icon: '💻' },
@@ -203,7 +205,7 @@ function Home() {
                             className="flex flex-col sm:flex-row gap-4 justify-center"
                             variants={fadeInUp}
                         >
-                            <Link to="/all-posts">
+                            <Link to={authStatus ? "/all-posts" : "/login"}>
                                 <motion.button
                                     className="px-6 sm:px-8 py-3 sm:py-4 bg-blue-600 text-white rounded-xl font-medium inline-flex items-center justify-center w-full sm:w-auto shadow-lg shadow-blue-200/50"
                                     whileHover={{ scale: 1.03 }}
@@ -214,7 +216,7 @@ function Home() {
                                 </motion.button>
                             </Link>
                             
-                            <Link to="/categories">
+                            <Link to="#">
                                 <motion.button
                                     className="px-6 sm:px-8 py-3 sm:py-4 bg-white border border-slate-200 text-slate-700 rounded-xl font-medium inline-flex items-center justify-center w-full sm:w-auto shadow-md"
                                     whileHover={{ scale: 1.03, backgroundColor: "#f8fafc" }}
