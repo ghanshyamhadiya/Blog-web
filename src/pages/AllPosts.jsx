@@ -41,7 +41,7 @@ function AllPosts() {
     return (
         <div className="py-12 bg-gray-50 min-h-screen">
             <Container>
-                <div className="mb-10 text-center">
+                <div className="mb-10 text-center pt-16">
                     <h1 className="text-4xl font-bold mb-4 text-gray-800 animate-fadeDown">
                         All Posts
                     </h1>
