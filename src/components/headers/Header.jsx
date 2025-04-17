@@ -2,7 +2,19 @@ import React, { useState, useEffect } from 'react';
 import { Container, Logo, LogoutBtn } from "../index";
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import { Menu, X, Home, LogIn, UserPlus, FileText, PlusCircle } from 'lucide-react';
+import { 
+  Menu, 
+  X, 
+  Home, 
+  LogIn, 
+  UserPlus, 
+  FileText, 
+  PlusCircle, 
+  BookOpen, 
+  Clock, 
+  TrendingUp, 
+  Star
+} from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 function Header() {
@@ -15,7 +27,7 @@ function Header() {
   // Handle scroll effect
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 10);
+      setIsScrolled(window.scrollY > 20);
     };
     
     window.addEventListener('scroll', handleScroll);
@@ -60,12 +72,27 @@ function Header() {
     },
   ];
 
+  // Enhanced animations for nav items
+  const navItemAnimation = {
+    hidden: { opacity: 0, y: -10 },
+    visible: i => ({
+      opacity: 1,
+      y: 0,
+      transition: {
+        delay: i * 0.1,
+        duration: 0.5,
+        ease: [0.6, 0.05, 0.01, 0.9] 
+      }
+    })
+    
+  };
+
   // Dynamic header styling based on scroll position
   const headerClasses = `
     fixed top-0 left-0 right-0 z-50 transition-all duration-500 ease-in-out
     ${isScrolled 
-      ? 'py-2 bg-gradient-to-r from-indigo-800 to-blue-700 shadow-lg' 
-      : 'py-4 bg-gradient-to-r from-indigo-900/90 to-blue-800/90 backdrop-blur-md'}
+      ? 'py-2 bg-white backdrop-blur-md shadow-lg border-b border-slate-100' 
+      : 'py-4 bg-white/90 backdrop-blur-sm'}
   `;
 
   return (
@@ -82,23 +109,34 @@ function Header() {
             whileHover={{ scale: 1.05 }}
             transition={{ type: "spring", stiffness: 400, damping: 10 }}
           >
-            <Link to="/" className="flex items-center">
-              <Logo width='70px' />
+            <Link to="/" className="flex items-center gap-2">
+              <div className="bg-blue-100 p-2 rounded-lg">
+                <BookOpen className="h-5 w-5 text-blue-600" />
+              </div>
+              <span className="font-bold text-xl text-slate-800 hidden sm:block">Writly</span>
             </Link>
           </motion.div>
           
           {/* Desktop Navigation */}
           <ul className="hidden md:flex items-center space-x-2">
-            {navItems.map((item) => 
+            {navItems.map((item, index) => 
               item.active ? (
-                <motion.li key={item.name} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                <motion.li 
+                  key={item.name} 
+                  custom={index} 
+                  initial="hidden" 
+                  animate="visible"
+                  variants={navItemAnimation}
+                  whileHover={{ scale: 1.05 }} 
+                  whileTap={{ scale: 0.95 }}
+                >
                   <Link 
                     to={item.slug}
                     className={`
                       px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 flex items-center
                       ${location.pathname === item.slug 
-                        ? 'bg-white text-blue-700 shadow-md' 
-                        : 'text-white hover:bg-white/20'}
+                        ? 'bg-blue-600 text-white shadow-md shadow-blue-200' 
+                        : 'text-slate-700 hover:bg-blue-50 hover:text-blue-600'}
                     `}
                   >
                     <span className="mr-1.5">{item.icon}</span>
@@ -109,7 +147,12 @@ function Header() {
             )}
             
             {authStatus && (
-              <motion.li className="ml-2">
+              <motion.li 
+                className="ml-2"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.5 }}
+              >
                 <LogoutBtn />
               </motion.li>
             )}
@@ -117,7 +160,7 @@ function Header() {
           
           {/* Mobile menu button */}
           <motion.button 
-            className="md:hidden p-2 rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors" 
+            className="md:hidden p-2 rounded-full bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors" 
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             whileTap={{ scale: 0.95 }}
           >
@@ -129,18 +172,21 @@ function Header() {
         <AnimatePresence>
           {mobileMenuOpen && (
             <motion.div 
-              className="md:hidden mt-4 py-2 bg-white rounded-xl shadow-xl overflow-hidden"
+              className="md:hidden mt-4 py-2 bg-white rounded-xl shadow-xl overflow-hidden border border-slate-100"
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
               transition={{ duration: 0.3, ease: "easeInOut" }}
             >
               <ul className="flex flex-col">
-                {navItems.map((item) => 
+                {navItems.map((item, index) => 
                   item.active ? (
                     <motion.li 
                       key={item.name} 
                       className="w-full"
+                      initial={{ x: -20, opacity: 0 }}
+                      animate={{ x: 0, opacity: 1 }}
+                      transition={{ delay: index * 0.1 }}
                       whileTap={{ backgroundColor: "#EEF2FF" }}
                     >
                       <Link 
@@ -148,11 +194,11 @@ function Header() {
                         className={`
                           block w-full px-4 py-3 text-sm font-medium transition-colors flex items-center
                           ${location.pathname === item.slug 
-                            ? 'bg-indigo-100 text-indigo-700 border-l-4 border-indigo-600' 
-                            : 'text-gray-700 hover:bg-gray-50'}
+                            ? 'bg-blue-50 text-blue-700 border-l-4 border-blue-600' 
+                            : 'text-slate-700 hover:bg-slate-50'}
                         `}
                       >
-                        <span className={`mr-3 ${location.pathname === item.slug ? 'text-indigo-600' : 'text-gray-500'}`}>
+                        <span className={`mr-3 ${location.pathname === item.slug ? 'text-blue-600' : 'text-slate-500'}`}>
                           {item.icon}
                         </span>
                         {item.name}
@@ -162,9 +208,14 @@ function Header() {
                 )}
                 
                 {authStatus && (
-                  <li className="w-full px-4 py-2 border-t border-gray-100 mt-1">
+                  <motion.li 
+                    className="w-full px-4 py-2 border-t border-slate-100 mt-1"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.3 }}
+                  >
                     <LogoutBtn />
-                  </li>
+                  </motion.li>
                 )}
               </ul>
             </motion.div>
