@@ -109,7 +109,7 @@ function Header() {
             )}
             
             {authStatus && (
-              <motion.li className="ml-2" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+              <motion.li className="ml-2">
                 <LogoutBtn />
               </motion.li>
             )}
