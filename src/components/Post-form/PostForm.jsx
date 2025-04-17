@@ -1,13 +1,15 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Button, Input, RTE, Select } from "..";
 import appwriteService from "../../appwrite/config";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
-import { motion } from "framer-motion";
-import { Upload, FileType, Check } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Upload, FileType, Check, Loader2 } from "lucide-react";
 
 export default function PostForm({ post }) {
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [uploadProgress, setUploadProgress] = useState(0);
     const { register, handleSubmit, watch, setValue, control, getValues } = useForm({
         defaultValues: {
             title: post?.title || "",
@@ -21,34 +23,72 @@ export default function PostForm({ post }) {
     const userData = useSelector((state) => state.auth.userData);
 
     const submit = async (data) => {
-        if (post) {
-            const file = data.image[0] ? await appwriteService.uploadFile(data.image[0]) : null;
+        setIsSubmitting(true);
+        try {
+            if (post) {
+                // Simulate upload progress
+                if (data.image[0]) {
+                    await simulateProgress();
+                    const file = await appwriteService.uploadFile(data.image[0]);
+                    
+                    if (file) {
+                        appwriteService.deleteFile(post.featuredImage);
+                    }
+                    
+                    const dbPost = await appwriteService.updatePost(post.$id, {
+                        ...data,
+                        featuredImage: file ? file.$id : undefined,
+                    });
+                    
+                    if (dbPost) {
+                        navigate(`/post/${dbPost.$id}`);
+                    }
+                } else {
+                    const dbPost = await appwriteService.updatePost(post.$id, {
+                        ...data
+                    });
+                    
+                    if (dbPost) {
+                        navigate(`/post/${dbPost.$id}`);
+                    }
+                }
+            } else {
+                // Simulate upload progress for new post
+                await simulateProgress();
+                const file = await appwriteService.uploadFile(data.image[0]);
 
-            if (file) {
-                appwriteService.deleteFile(post.featuredImage);
-            }
+                if (file) {
+                    const fileId = file.$id;
+                    data.featuredImage = fileId;
+                    const dbPost = await appwriteService.CreatePost({ ...data, userId: userData.$id });
 
-            const dbPost = await appwriteService.updatePost(post.$id, {
-                ...data,
-                featuredImage: file ? file.$id : undefined,
-            });
-
-            if (dbPost) {
-                navigate(`/post/${dbPost.$id}`);
-            }
-        } else {
-            const file = await appwriteService.uploadFile(data.image[0]);
-
-            if (file) {
-                const fileId = file.$id;
-                data.featuredImage = fileId;
-                const dbPost = await appwriteService.CreatePost({ ...data, userId: userData.$id });
-
-                if (dbPost) {
-                    navigate(`/post/${dbPost.$id}`);
+                    if (dbPost) {
+                        navigate(`/post/${dbPost.$id}`);
+                    }
                 }
             }
+        } catch (error) {
+            console.error("Error submitting post:", error);
+        } finally {
+            setIsSubmitting(false);
+            setUploadProgress(0);
         }
+    };
+
+    // Simulate progress for better UX
+    const simulateProgress = async () => {
+        return new Promise((resolve) => {
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += Math.random() * 15;
+                if (progress > 95) {
+                    progress = 100;
+                    clearInterval(interval);
+                    setTimeout(resolve, 500); // Give a small delay at 100%
+                }
+                setUploadProgress(Math.min(Math.round(progress), 100));
+            }, 300);
+        });
     };
 
     const slugTransform = useCallback((value) => {
@@ -87,13 +127,71 @@ export default function PostForm({ post }) {
         visible: { y: 0, opacity: 1, transition: { type: "spring", stiffness: 300, damping: 24 } }
     };
 
+    // Loading overlay variants
+    const overlayVariants = {
+        hidden: { opacity: 0 },
+        visible: { opacity: 1 }
+    };
+
+    const pulseVariants = {
+        initial: { scale: 0.95, opacity: 0.8 },
+        animate: { 
+            scale: 1.05, 
+            opacity: 1,
+            transition: { 
+                repeat: Infinity, 
+                repeatType: "reverse", 
+                duration: 1 
+            }
+        }
+    };
+
     return (
         <motion.div
             initial="hidden"
             animate="visible"
             variants={containerVariants}
-            className="my-12"
+            className="my-12 relative"
         >
+            <AnimatePresence>
+                {isSubmitting && (
+                    <motion.div
+                        initial="hidden"
+                        animate="visible"
+                        exit="hidden"
+                        variants={overlayVariants}
+                        className="absolute inset-0 bg-white/80 backdrop-blur-sm z-50 flex flex-col items-center justify-center rounded-xl"
+                    >
+                        <motion.div
+                            variants={pulseVariants}
+                            initial="initial"
+                            animate="animate"
+                            className="text-center"
+                        >
+                            <Loader2 size={60} className="animate-spin text-blue-600 mx-auto mb-4" />
+                            <h3 className="text-xl font-semibold text-gray-800 mb-2">
+                                {post ? "Updating your post..." : "Creating your post..."}
+                            </h3>
+                            <p className="text-gray-600">Please wait while we process your submission</p>
+                            
+                            {uploadProgress > 0 && (
+                                <div className="mt-4 w-64 bg-gray-200 rounded-full h-4 overflow-hidden">
+                                    <motion.div 
+                                        className="h-full bg-blue-600 rounded-full"
+                                        initial={{ width: "0%" }}
+                                        animate={{ width: `${uploadProgress}%` }}
+                                        transition={{ type: "spring", stiffness: 50 }}
+                                    />
+                                </div>
+                            )}
+                            <p className="mt-2 text-sm text-gray-500">
+                                {uploadProgress}% complete
+                            </p>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
             <motion.form 
                 onSubmit={handleSubmit(submit)} 
                 className="flex flex-wrap bg-white rounded-xl shadow-lg p-6 md:p-8"
@@ -191,10 +289,20 @@ export default function PostForm({ post }) {
                         <Button 
                             type="submit" 
                             bgColor={post ? "bg-green-600" : "bg-blue-600"} 
-                            className="w-full flex items-center justify-center gap-2"
+                            className={`w-full flex items-center justify-center gap-2 ${isSubmitting ? 'opacity-70 cursor-not-allowed' : ''}`}
+                            disabled={isSubmitting}
                         >
-                            {post ? <Check size={18} /> : <FileType size={18} />}
-                            {post ? "Update Post" : "Create Post"}
+                            {isSubmitting ? (
+                                <Loader2 size={18} className="animate-spin" />
+                            ) : post ? (
+                                <Check size={18} />
+                            ) : (
+                                <FileType size={18} />
+                            )}
+                            {isSubmitting 
+                                ? (post ? "Updating..." : "Creating...") 
+                                : (post ? "Update Post" : "Create Post")
+                            }
                         </Button>
                     </motion.div>
                 </motion.div>
