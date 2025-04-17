@@ -1,5 +1,5 @@
 import React, { useId, useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const Input = React.forwardRef(
   function Input({
@@ -7,6 +7,8 @@ const Input = React.forwardRef(
     type = 'text',
     className = '',
     icon = null,
+    rightIcon = null,
+    error = null,
     ...props
   }, ref) {
     const id = useId();
@@ -29,7 +31,7 @@ const Input = React.forwardRef(
         )}
         <motion.div 
           className={`relative flex items-center rounded-lg overflow-hidden border-2 ${
-            isFocused ? 'border-blue-500 shadow-md' : 'border-gray-200'
+            error ? 'border-red-400' : isFocused ? 'border-blue-500 shadow-md' : 'border-gray-200'
           }`}
           initial={{ y: 5, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
@@ -38,9 +40,9 @@ const Input = React.forwardRef(
         >
           {icon && (
             <motion.div 
-              className="absolute left-3 text-gray-400"
+              className="absolute left-3 text-gray-400 flex items-center justify-center"
               animate={{ 
-                color: isFocused ? "rgb(59, 130, 246)" : "rgb(156, 163, 175)" 
+                color: error ? "rgb(248, 113, 113)" : isFocused ? "rgb(59, 130, 246)" : "rgb(156, 163, 175)" 
               }}
               transition={{ duration: 0.3 }}
             >
@@ -49,16 +51,40 @@ const Input = React.forwardRef(
           )}
           <input 
             type={type}
-            className={`w-full px-4 py-3 bg-white text-gray-800 outline-none ${
+            className={`w-full py-3 bg-white text-gray-800 outline-none ${
               icon ? 'pl-10' : 'pl-4'
-            } ${className}`}
+            } ${rightIcon ? 'pr-10' : 'pr-4'} ${className}`}
             ref={ref}
             onFocus={() => setIsFocused(true)}
             onBlur={() => setIsFocused(false)}
             {...props}
             id={id}
           />
+          {rightIcon && (
+            <motion.div 
+              className="absolute right-3 text-gray-400 h-full flex items-center justify-center"
+              animate={{ 
+                color: isFocused ? "rgb(107, 114, 128)" : "rgb(156, 163, 175)" 
+              }}
+              transition={{ duration: 0.3 }}
+            >
+              {rightIcon}
+            </motion.div>
+          )}
         </motion.div>
+        <AnimatePresence>
+          {error && (
+            <motion.p 
+              className="text-red-500 text-xs mt-1 ml-1"
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.2 }}
+            >
+              {error}
+            </motion.p>
+          )}
+        </AnimatePresence>
       </div>
     );
   }
