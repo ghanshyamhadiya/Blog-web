@@ -1,16 +1,91 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import appwriteService from "../appwrite/config";
 import { Button, Container } from "../components";
 import parse from "html-react-parser";
 import { useSelector } from "react-redux";
-import { ArrowLeft, Edit, Trash2, Heart, MessageSquare, Share2, Bookmark, Calendar, Clock } from "lucide-react";
+import { ArrowLeft, Edit, Trash2, Heart, MessageSquare, Share2, Bookmark, Calendar, Clock, X, AlertTriangle } from "lucide-react";
+
+// DeleteModal Component
+const DeleteModal = ({ isOpen, onClose, onConfirm, postTitle }) => {
+  const [animateIn, setAnimateIn] = useState(false);
+  
+  useEffect(() => {
+    if (isOpen) {
+      setTimeout(() => setAnimateIn(true), 10);
+    } else {
+      setAnimateIn(false);
+    }
+  }, [isOpen]);
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      {/* Backdrop/Overlay */}
+      <div 
+        className={`absolute inset-0 bg-black transition-opacity duration-300 ${animateIn ? 'opacity-50' : 'opacity-0'}`} 
+        onClick={onClose}
+      />
+      
+      {/* Modal */}
+      <div 
+        className={`bg-white rounded-lg shadow-xl max-w-md w-full mx-4 transition-all duration-300 transform 
+        ${animateIn ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-95 translate-y-4'}`}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between p-4 border-b border-gray-100">
+          <div className="flex items-center text-red-600">
+            <AlertTriangle size={20} className="mr-2" />
+            <h3 className="text-lg font-medium">Delete Post</h3>
+          </div>
+          <button 
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-full hover:bg-gray-100"
+          >
+            <X size={20} />
+          </button>
+        </div>
+        
+        {/* Content */}
+        <div className="p-6">
+          <p className="text-gray-700">
+            Are you sure you want to delete <span className="font-semibold">"{postTitle}"</span>? 
+            This action cannot be undone.
+          </p>
+        </div>
+        
+        {/* Footer */}
+        <div className="flex justify-end gap-3 p-4 bg-gray-50 rounded-b-lg">
+          <Button 
+            bgColor="bg-gray-200" 
+            textColor="text-gray-700"
+            className="hover:bg-gray-300 transition-colors"
+            onClick={onClose}
+          >
+            Cancel
+          </Button>
+          <Button 
+            bgColor="bg-red-600" 
+            textColor="text-white"
+            className="hover:bg-red-700 transition-colors flex items-center gap-1"
+            onClick={onConfirm}
+          >
+            <Trash2 size={16} />
+            Delete
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 export default function Post() {
     const [post, setPost] = useState(null);
     const [loading, setLoading] = useState(true);
     const [liked, setLiked] = useState(false);
     const [bookmarked, setBookmarked] = useState(false);
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const { slug } = useParams();
     const navigate = useNavigate();
     const contentRef = useRef(null);
@@ -75,15 +150,21 @@ export default function Post() {
         }
     }, [loading, post]);
 
-    const deletePost = () => {
-        if (window.confirm("Are you sure you want to delete this post?")) {
-            appwriteService.deletePost(post.$id).then((status) => {
-                if (status) {
-                    appwriteService.deleteFile(post.featuredImage);
-                    navigate("/");
-                }
-            });
-        }
+    const openDeleteModal = () => {
+        setIsDeleteModalOpen(true);
+    };
+
+    const closeDeleteModal = () => {
+        setIsDeleteModalOpen(false);
+    };
+
+    const confirmDelete = () => {
+        appwriteService.deletePost(post.$id).then((status) => {
+            if (status) {
+                appwriteService.deleteFile(post.featuredImage);
+                navigate("/all-posts");
+            }
+        });
     };
 
     if (loading) {
@@ -160,7 +241,7 @@ export default function Post() {
                                     bgColor="bg-white" 
                                     textColor="text-red-600"
                                     className="flex items-center gap-1 shadow-lg hover:bg-gray-100 transition-colors duration-300"
-                                    onClick={deletePost}
+                                    onClick={openDeleteModal}
                                 >
                                     <Trash2 size={16} />
                                     Delete
@@ -185,6 +266,13 @@ export default function Post() {
                     </div>
                 </div>
             </Container>
+
+            <DeleteModal 
+                isOpen={isDeleteModalOpen}
+                onClose={closeDeleteModal}
+                onConfirm={confirmDelete}
+                postTitle={post?.title || "this post"}
+            />
         </div>
     ) : null;
 }
