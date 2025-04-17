@@ -31,6 +31,7 @@ function PostCard({ $id, title, featuredImage, content, author, date }) {
       >
         <div className="relative overflow-hidden" style={{ aspectRatio: '16/9' }}>
           <img 
+            loading='lazy'
             src={appwriteService.getFilePreview(featuredImage)} 
             alt={title}
             className={`
