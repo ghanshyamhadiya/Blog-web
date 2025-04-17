@@ -1,9 +1,4 @@
 main{
     margin: 84px 0 40px 0;
 }
-
-@media (max-width: 576px) {
-    main {
-        margin: 0;
-    }
-  }
+ 
